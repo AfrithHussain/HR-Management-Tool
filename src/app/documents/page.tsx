@@ -77,36 +77,36 @@ export default function DocumentsPage() {
 
   const getTypeColor = (type: string) => {
     switch(type) {
-      case 'document': return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-      case 'video': return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'pdf': return 'bg-red-500/10 text-red-400 border-red-500/20';
-      default: return 'bg-gray-500/10 text-gray-400 border-gray-500/20';
+      case 'document': return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'video': return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'pdf': return 'bg-red-50 text-red-700 border-red-200';
+      default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-gray-900 text-white">
+    <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
       
       <div className="max-w-7xl mx-auto py-10 px-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+            <h1 className="text-4xl font-bold mb-2 text-gray-900">
               Learning Resources
             </h1>
-            <p className="text-gray-400">Access study materials and documentation</p>
+            <p className="text-gray-600">Access study materials and documentation</p>
           </div>
           <button 
             onClick={() => router.back()} 
-            className="px-5 py-2.5 border border-gray-700 rounded-lg text-sm hover:bg-gray-800 transition-colors"
+            className="px-5 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors"
           >
             ← Back
           </button>
         </div>
 
         {/* Search and Filter Bar */}
-        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-8 shadow-sm">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
@@ -116,10 +116,10 @@ export default function DocumentsPage() {
                   placeholder="Search by title, description, or tags..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full px-4 py-3 pl-12 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                 />
                 <svg 
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" 
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -137,8 +137,8 @@ export default function DocumentsPage() {
                   onClick={() => setSelectedType(type)}
                   className={`px-4 py-3 rounded-lg text-sm font-medium transition-all border ${
                     selectedType === type
-                      ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400'
-                      : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750'
+                      ? 'bg-blue-50 border-blue-500 text-blue-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {type === 'all' ? '📚 All' : `${getTypeIcon(type)} ${type.charAt(0).toUpperCase() + type.slice(1)}`}
@@ -148,7 +148,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Results Count */}
-          <div className="mt-4 text-sm text-gray-500">
+          <div className="mt-4 text-sm text-gray-600">
             Showing {filteredContent.length} of {content.length} resources
           </div>
         </div>
@@ -156,18 +156,18 @@ export default function DocumentsPage() {
         {/* Content Grid */}
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-800 border-t-emerald-500 mb-4"></div>
-            <p className="text-gray-500 animate-pulse">Loading resources...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-gray-900 mb-4"></div>
+            <p className="text-gray-600 animate-pulse">Loading resources...</p>
           </div>
         ) : filteredContent.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
               {searchQuery ? '🔍' : '📂'}
             </div>
-            <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchQuery ? 'No results found' : 'No resources available'}
             </h3>
-            <p className="text-gray-500">
+            <p className="text-gray-600">
               {searchQuery ? 'Try adjusting your search terms' : 'Check back later for new content'}
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function DocumentsPage() {
             {filteredContent.map((item) => (
               <div 
                 key={item.id} 
-                className="bg-gray-900/80 border border-gray-800 rounded-xl p-6 hover:border-emerald-500/50 transition-all duration-300 group"
+                className="bg-white border border-gray-200 rounded-xl p-6 hover:border-blue-500 hover:shadow-md transition-all duration-300 group"
               >
                 {/* Type Badge */}
                 <div className="flex items-center justify-between mb-4">
@@ -189,12 +189,12 @@ export default function DocumentsPage() {
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-emerald-400 transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
                   {item.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-gray-400 mb-4 line-clamp-3">
+                <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                   {item.description}
                 </p>
 
@@ -204,7 +204,7 @@ export default function DocumentsPage() {
                     {item.tags.slice(0, 3).map((tag, idx) => (
                       <span 
                         key={idx} 
-                        className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded border border-gray-700"
+                        className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded border border-gray-200"
                       >
                         #{tag}
                       </span>
@@ -222,7 +222,7 @@ export default function DocumentsPage() {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-500 hover:to-blue-500 text-white rounded-lg font-medium transition-all shadow-lg group-hover:shadow-emerald-500/20"
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium transition-all shadow-sm"
                 >
                   <span>View Resource</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -143,33 +143,32 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
   }, [params]);
 
   if (isLoading) return (
-    <div className="min-h-screen  flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-800 border-t-emerald-500 mx-auto mb-4"></div>
-        <p className="text-gray-400">Loading submissions...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-emerald-500 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading submissions...</p>
       </div>
     </div>
   );
   
   if (allSubmissions.length === 0) return (
-    <div className="min-h-screen bg-gray-950 text-white px-6 md:px-12">
-      <Toaster />
+    <div className="min-h-screen px-6 md:px-12">
       <div className=" mx-auto">
-        <button onClick={() => router.push('/admin/users')} className="mb-6 text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-2 transition-colors">
+        <button onClick={() => router.push('/admin/users')} className="mb-6 text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-2 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             Back to Users
         </button>
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-12 text-center">
-          <div className="w-20 h-20 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center shadow-lg">
+          <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold mb-2">No Submissions Found</h2>
-          <p className="text-gray-400 mb-6">This user hasn't submitted any assessments yet.</p>
+          <h2 className="text-2xl font-bold mb-2 text-gray-900">No Submissions Found</h2>
+          <p className="text-gray-600 mb-6">This user hasn't submitted any assessments yet.</p>
           <button 
             onClick={() => router.push('/admin/users')} 
-            className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-semibold transition-all"
+            className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-all"
           >
             Back to Users
           </button>
@@ -179,17 +178,15 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
   );
 
   return (
-    <div className="min-h-screen  text-white  ">
-      <Toaster />
-      
+    <div className="min-h-screen">
       <div className=" mx-auto">
-        <button onClick={() => router.push('/admin/users')} className="mb-6 text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-2 transition-colors">
+        <button onClick={() => router.push('/admin/users')} className="mb-6 text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-2 transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             Back to Users
         </button>
 
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">{allSubmissions[0].name}</h1>
-        <p className="text-gray-400 mb-6 md:mb-8">Submission History ({allSubmissions.length} module{allSubmissions.length !== 1 ? 's' : ''})</p>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2 text-gray-900">{allSubmissions[0].name}</h1>
+        <p className="text-gray-600 mb-6 md:mb-8">Submission History ({allSubmissions.length} module{allSubmissions.length !== 1 ? 's' : ''})</p>
         
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Left Sidebar - Module Tabs */}
@@ -205,18 +202,18 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
                             onClick={() => setSelectedModule(moduleKey)}
                             className={`w-full text-left p-3 md:p-4 rounded-xl border-2 transition-all ${
                                 isSelected 
-                                ? "bg-emerald-500/10 border-emerald-500 shadow-lg shadow-emerald-500/20" 
-                                : "bg-gray-900 border-gray-800 hover:border-gray-700 hover:bg-gray-800/50"
+                                ? "bg-emerald-50 border-emerald-500 shadow-lg" 
+                                : "bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                             }`}
                         >
                             <div className="flex items-center justify-between mb-2">
-                                <h3 className={`font-bold text-xs sm:text-sm line-clamp-2 flex-1 pr-2 ${isSelected ? "text-emerald-400" : "text-white"}`}>
+                                <h3 className={`font-bold text-xs sm:text-sm line-clamp-2 flex-1 pr-2 ${isSelected ? "text-emerald-600" : "text-gray-900"}`}>
                                     {submission.moduleName || "General Assessment"}
                                 </h3>
                                 <div className={`text-base sm:text-lg font-bold flex-shrink-0 ${
-                                    percentage >= 70 ? "text-emerald-400" : 
-                                    percentage >= 50 ? "text-yellow-400" : 
-                                    "text-red-400"
+                                    percentage >= 70 ? "text-emerald-600" : 
+                                    percentage >= 50 ? "text-yellow-600" : 
+                                    "text-red-600"
                                 }`}>
                                     {percentage}%
                                 </div>
@@ -224,20 +221,20 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
                             
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs">
                                 {submission.moduleName && (
-                                    <span className="bg-indigo-500/20 text-indigo-300 px-1.5 sm:px-2 py-0.5 rounded font-semibold">
+                                    <span className="bg-indigo-50 text-indigo-600 px-1.5 sm:px-2 py-0.5 rounded font-semibold">
                                         Module
                                     </span>
                                 )}
                                 {submission.attemptNumber && (
-                                    <span className="bg-blue-500/20 text-blue-300 px-1.5 sm:px-2 py-0.5 rounded font-semibold">
+                                    <span className="bg-blue-50 text-blue-600 px-1.5 sm:px-2 py-0.5 rounded font-semibold">
                                         Attempt {submission.attemptNumber}/3
                                     </span>
                                 )}
                                 {submission.passed !== undefined && (
                                     <span className={`px-1.5 sm:px-2 py-0.5 rounded font-bold ${
                                         submission.passed 
-                                        ? "bg-emerald-500/20 text-emerald-300" 
-                                        : "bg-red-500/20 text-red-300"
+                                        ? "bg-emerald-50 text-emerald-600" 
+                                        : "bg-red-50 text-red-600"
                                     }`}>
                                         {submission.passed ? "✓ Passed" : "✗ Failed"}
                                     </span>
@@ -248,7 +245,7 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
                                 {new Date(submission.submittedAt?.toDate?.() || submission.submittedAt).toLocaleString()}
                             </p>
                             
-                            <div className="text-gray-400 text-xs mt-1">
+                            <div className="text-gray-600 text-xs mt-1">
                                 Score: {submission.score}/{submission.totalQuestions}
                             </div>
                         </button>
@@ -265,25 +262,25 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
                     const percentage = Math.round((submission.score / (submission.totalQuestions || 1)) * 100);
                     
                     return (
-                        <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-xl p-4 md:p-6">
+                        <div className="bg-white border border-gray-200 rounded-xl shadow-lg p-4 md:p-6">
                             {/* Header */}
-                            <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-800">
-                                <h2 className="text-xl md:text-2xl font-bold text-white mb-3">
+                            <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b border-gray-200">
+                                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3">
                                     {submission.moduleName || "General Assessment"}
                                 </h2>
                                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                                    <div className="flex items-center gap-2 bg-black/30 px-3 md:px-4 py-2 rounded-lg border border-gray-800">
-                                        <span className="text-gray-400 text-xs sm:text-sm">Score:</span>
-                                        <span className="text-white font-semibold text-sm sm:text-base">{submission.score}/{submission.totalQuestions}</span>
+                                    <div className="flex items-center gap-2 bg-gray-50 px-3 md:px-4 py-2 rounded-lg border border-gray-200">
+                                        <span className="text-gray-600 text-xs sm:text-sm">Score:</span>
+                                        <span className="text-gray-900 font-semibold text-sm sm:text-base">{submission.score}/{submission.totalQuestions}</span>
                                         <span className={`text-lg sm:text-xl font-bold ml-1 sm:ml-2 ${
-                                            percentage >= 70 ? "text-emerald-400" : 
-                                            percentage >= 50 ? "text-yellow-400" : 
-                                            "text-red-400"
+                                            percentage >= 70 ? "text-emerald-600" : 
+                                            percentage >= 50 ? "text-yellow-600" : 
+                                            "text-red-600"
                                         }`}>
                                             {percentage}%
                                         </span>
                                     </div>
-                                    <span className="text-gray-400 text-xs sm:text-sm">
+                                    <span className="text-gray-600 text-xs sm:text-sm">
                                         {new Date(submission.submittedAt?.toDate?.() || submission.submittedAt).toLocaleString()}
                                     </span>
                                 </div>
@@ -304,20 +301,20 @@ export default function SubmissionDetailsPage({ params }: { params: Promise<{ id
                                     const isCorrect = JSON.stringify(userAnsIndices.sort()) === JSON.stringify(correctAnswers.sort());
 
                                     return (
-                                        <div key={qId} className={`p-3 md:p-5 rounded-xl border-l-4 bg-gray-900/50 ${isCorrect ? "border-emerald-500" : "border-red-500"}`}>
+                                        <div key={qId} className={`p-3 md:p-5 rounded-xl border-l-4 bg-gray-50 ${isCorrect ? "border-emerald-500" : "border-red-500"}`}>
                                             <div className="flex items-start gap-2 md:gap-3 mb-3">
-                                                <span className="text-gray-500 font-bold text-xs md:text-sm flex-shrink-0">Q{index + 1}.</span>
-                                                <p className="font-medium text-gray-200 flex-1 text-sm md:text-base">{questionText}</p>
+                                                <span className="text-gray-600 font-bold text-xs md:text-sm flex-shrink-0">Q{index + 1}.</span>
+                                                <p className="font-medium text-gray-900 flex-1 text-sm md:text-base">{questionText}</p>
                                             </div>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 text-sm ml-5 md:ml-7">
-                                                <div className={`p-2.5 md:p-3 rounded-lg border ${isCorrect ? "bg-emerald-500/10 border-emerald-500/30" : "bg-red-500/10 border-red-500/30"}`}>
-                                                    <span className={`block text-xs mb-1 uppercase font-bold ${isCorrect ? "text-emerald-500" : "text-red-500"}`}>Candidate Answer</span>
-                                                    <span className="text-white text-xs md:text-sm">{userAnsText}</span>
+                                                <div className={`p-2.5 md:p-3 rounded-lg border ${isCorrect ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                                                    <span className={`block text-xs mb-1 uppercase font-bold ${isCorrect ? "text-emerald-600" : "text-red-600"}`}>Candidate Answer</span>
+                                                    <span className="text-gray-900 text-xs md:text-sm">{userAnsText}</span>
                                                 </div>
                                                 {!isCorrect && (
-                                                    <div className="bg-gray-800/50 p-2.5 md:p-3 rounded-lg border border-gray-700">
-                                                        <span className="text-gray-500 block text-xs mb-1 uppercase font-bold">Correct Answer</span>
-                                                        <span className="text-emerald-400 text-xs md:text-sm">{correctAnsText}</span>
+                                                    <div className="bg-white p-2.5 md:p-3 rounded-lg border border-gray-200">
+                                                        <span className="text-gray-600 block text-xs mb-1 uppercase font-bold">Correct Answer</span>
+                                                        <span className="text-emerald-600 text-xs md:text-sm">{correctAnsText}</span>
                                                     </div>
                                                 )}
                                             </div>

@@ -21,6 +21,7 @@ interface UserWithModules {
   email: string;
   name: string;
   role: string;
+  roles?: string[];
   allowedModules: string[];
   moduleProgress: Record<string, {
     attempts: number;
@@ -56,12 +57,17 @@ export default function SubmissionsPage() {
         const userData = doc.data();
         usersMap.set(doc.id, userData);
         
-        // Collect users with module-based roles (plug/socket)
-        if ((userData.role === "plug" || userData.role === "socket") && userData.moduleProgress) {
+        // Collect users with module-based roles (product roles)
+        const productRoles = ["cloudsync-pro", "taskflow", "analytics-pro", "company-training"];
+        const userRoles = userData.roles || [userData.role];
+        const hasProductRole = userRoles.some((r: string) => productRoles.includes(r));
+        
+        if (hasProductRole && userData.moduleProgress) {
           usersWithModules.push({
             email: doc.id,
             name: userData.name || doc.id,
             role: userData.role,
+            roles: userData.roles || [userData.role],
             allowedModules: userData.allowedModules || [],
             moduleProgress: userData.moduleProgress || {},
           });
@@ -118,7 +124,10 @@ export default function SubmissionsPage() {
     const matchesSearch =
       user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === "all" || user.role === filterRole;
+    
+    // Check if user has the selected role (check roles array)
+    const userRoles = user.roles || [user.role];
+    const matchesRole = filterRole === "all" || userRoles.includes(filterRole);
     
     // Filter by module
     let matchesModule = filterModule === "all";
@@ -146,7 +155,10 @@ export default function SubmissionsPage() {
   const uniqueModules = Array.from(
     new Set(
       moduleUsers
-        .filter(user => filterRole === "all" || user.role === filterRole) // Filter by role first
+        .filter(user => {
+          const userRoles = user.roles || [user.role];
+          return filterRole === "all" || userRoles.includes(filterRole);
+        })
         .flatMap(user => Object.keys(user.moduleProgress || {}))
     )
   ).sort((a, b) => {
@@ -157,29 +169,27 @@ export default function SubmissionsPage() {
 
   const getScoreColor = (score: number, total: number) => {
     const percentage = (score / total) * 100;
-    if (percentage >= 70) return "text-emerald-400";
-    if (percentage >= 50) return "text-yellow-400";
-    return "text-red-400";
+    if (percentage >= 70) return "text-emerald-600";
+    if (percentage >= 50) return "text-yellow-600";
+    return "text-red-600";
   };
 
   return (
     <>
-      <Toaster position="top-right" />
-
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Submissions</h1>
-        <p className="text-gray-400">View all assessment submissions</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Submissions</h1>
+        <p className="text-gray-500">View all assessment submissions</p>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-4 border-b border-gray-700 pb-2">
+      <div className="mb-6 flex gap-4 border-b border-gray-200 pb-2">
         <button
           onClick={() => setActiveTab("general")}
           className={`text-lg font-medium transition-all px-4 py-2 ${
             activeTab === "general"
-              ? "text-white border-b-2 border-emerald-500"
-              : "text-gray-500 hover:text-gray-300"
+              ? "text-gray-900 border-b-2 border-emerald-500"
+              : "text-gray-500 hover:text-gray-600"
           }`}
         >
           Interview Screening ({generalSubmissions.length})
@@ -188,11 +198,11 @@ export default function SubmissionsPage() {
           onClick={() => setActiveTab("module")}
           className={`text-lg font-medium transition-all px-4 py-2 ${
             activeTab === "module"
-              ? "text-white border-b-2 border-emerald-500"
-              : "text-gray-500 hover:text-gray-300"
+              ? "text-gray-900 border-b-2 border-emerald-500"
+              : "text-gray-500 hover:text-gray-600"
           }`}
         >
-          GG Internal Assessment ({moduleUsers.length})
+          HireLearn Internal Assessment ({moduleUsers.length})
         </button>
       </div>
 
@@ -203,7 +213,7 @@ export default function SubmissionsPage() {
           placeholder="Search by name or email"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="p-3 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+          className="p-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
         />
         <select
           value={filterRole}
@@ -211,20 +221,22 @@ export default function SubmissionsPage() {
             setFilterRole(e.target.value);
             setFilterModule("all"); // Reset module filter when role changes
           }}
-          className="p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+          className="p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
         >
           <option value="all">All Roles</option>
           <option value="frontend">Frontend</option>
           <option value="backend">Backend</option>
-          <option value="plug">Plug</option>
-          <option value="socket">Socket</option>
+          <option value="cloudsync-pro">CloudSync Pro</option>
+          <option value="taskflow">TaskFlow</option>
+          <option value="analytics-pro">AnalyticsPro</option>
+          <option value="company-training">Company Training</option>
         </select>
         {activeTab === "module" && (
           <>
             <select
               value={filterModule}
               onChange={(e) => setFilterModule(e.target.value)}
-              className="p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+              className="p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
             >
               <option value="all">All Modules</option>
               {uniqueModules.map((module) => (
@@ -236,7 +248,7 @@ export default function SubmissionsPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+              className="p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
             >
               <option value="all">All Status</option>
               <option value="passed">Passed</option>
@@ -250,37 +262,37 @@ export default function SubmissionsPage() {
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-700 border-t-emerald-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-emerald-500"></div>
         </div>
       ) : (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl overflow-hidden">
+        <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-xl shadow-2xl overflow-hidden">
           {activeTab === "general" ? (
             // General Assessments Table
             <div className="overflow-x-auto">
               {filteredGeneralSubmissions.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-gray-500">
                   <p>No interview screening submissions found.</p>
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-900/50">
-                    <tr className="border-b border-gray-700">
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                  <thead className="bg-white/50">
+                    <tr className="border-b border-gray-200">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Candidate
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Email
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Role
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Score
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Submitted
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Actions
                       </th>
                     </tr>
@@ -295,12 +307,12 @@ export default function SubmissionsPage() {
                       return (
                         <tr
                           key={sub.id}
-                          className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors"
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                         >
-                          <td className="p-4 text-gray-200">{sub.name || "-"}</td>
-                          <td className="p-4 text-gray-200 text-sm">{sub.email}</td>
+                          <td className="p-4 text-gray-900">{sub.name || "-"}</td>
+                          <td className="p-4 text-gray-600 text-sm">{sub.email}</td>
                           <td className="p-4">
-                            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded capitalize">
+                            <span className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded capitalize">
                               {sub.role || "N/A"}
                             </span>
                           </td>
@@ -312,23 +324,23 @@ export default function SubmissionsPage() {
                               <span
                                 className={`px-2 py-0.5 rounded text-xs font-semibold ${
                                   percentage >= 70
-                                    ? "bg-emerald-500/20 text-emerald-400"
+                                    ? "bg-emerald-50 text-emerald-600"
                                     : percentage >= 50
-                                    ? "bg-yellow-500/20 text-yellow-400"
-                                    : "bg-red-500/20 text-red-400"
+                                    ? "bg-yellow-50 text-yellow-600"
+                                    : "bg-red-50 text-red-600"
                                 }`}
                               >
                                 {percentage}%
                               </span>
                             </div>
                           </td>
-                          <td className="p-4 text-gray-400 text-sm">
+                          <td className="p-4 text-gray-500 text-sm">
                             {sub.submittedAt?.toDate?.()?.toLocaleString() || "-"}
                           </td>
                           <td className="p-4">
                             <Link
                               href={`/admin/submission/${sub.id}`}
-                              className="text-blue-400 hover:text-blue-300 font-medium text-sm"
+                              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                             >
                               View Details
                             </Link>
@@ -344,26 +356,26 @@ export default function SubmissionsPage() {
             // Module Assessments Table
             <div className="overflow-x-auto">
               {filteredModuleUsers.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
-                  <p>No GG internal assessment users found.</p>
+                <div className="text-center py-12 text-gray-500">
+                  <p>No HireLearn internal assessment users found.</p>
                 </div>
               ) : (
                 <table className="w-full">
-                  <thead className="bg-gray-900/50">
-                    <tr className="border-b border-gray-700">
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                  <thead className="bg-white/50">
+                    <tr className="border-b border-gray-200">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Candidate
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Email
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Role
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Modules Progress
                       </th>
-                      <th className="p-4 text-left text-gray-300 font-semibold text-sm">
+                      <th className="p-4 text-left text-gray-600 font-semibold text-sm">
                         Actions
                       </th>
                     </tr>
@@ -373,42 +385,50 @@ export default function SubmissionsPage() {
                       return (
                         <tr
                           key={user.email}
-                          className="border-b border-gray-700 hover:bg-gray-700/30 transition-colors"
+                          className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
                         >
-                          <td className="p-4 text-gray-200">{user.name || "-"}</td>
-                          <td className="p-4 text-gray-200 text-sm">{user.email}</td>
+                          <td className="p-4 text-gray-900">{user.name || "-"}</td>
+                          <td className="p-4 text-gray-600 text-sm">{user.email}</td>
                           <td className="p-4">
-                            <span className="px-2 py-1 bg-blue-500/20 text-blue-400 text-xs rounded capitalize">
-                              {user.role || "N/A"}
-                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {(user.roles || [user.role]).map((role) => (
+                                <span key={role} className="px-2 py-1 bg-blue-50 text-blue-600 text-xs rounded capitalize">
+                                  {role === "cloudsync-pro" ? "CloudSync Pro" :
+                                   role === "taskflow" ? "TaskFlow" :
+                                   role === "analytics-pro" ? "AnalyticsPro" :
+                                   role === "company-training" ? "Company Training" :
+                                   role}
+                                </span>
+                              ))}
+                            </div>
                           </td>
                           <td className="p-4">
                             <div className="flex flex-wrap gap-2">
                               {Object.entries(user.moduleProgress || {}).map(([modName, progress]) => {
                                 const percentage = progress.bestScore || 0;
                                 return (
-                                  <div key={modName} className="flex items-center gap-2 bg-gray-900/50 px-3 py-2 rounded-lg border border-gray-700">
+                                  <div key={modName} className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
                                     <div className="flex flex-col">
-                                      <span className="text-xs text-gray-400 truncate max-w-[150px]">
+                                      <span className="text-xs text-gray-600 truncate max-w-[150px]">
                                         {modName.replace(/^Module \d+: /, "")}
                                       </span>
                                       <div className="flex items-center gap-2 mt-1">
                                         <span className={`text-xs font-semibold ${
                                           progress.passed 
-                                            ? "text-emerald-400" 
+                                            ? "text-emerald-600" 
                                             : progress.attempts >= 3
-                                            ? "text-red-400"
-                                            : "text-yellow-400"
+                                            ? "text-red-600"
+                                            : "text-yellow-600"
                                         }`}>
                                           {progress.passed ? `✓ ${percentage}%` : `${progress.attempts}/3 attempts`}
                                         </span>
                                         <span
                                           className={`px-2 py-0.5 rounded text-xs font-semibold ${
                                             progress.passed
-                                              ? "bg-emerald-500/20 text-emerald-400"
+                                              ? "bg-emerald-50 text-emerald-600"
                                               : progress.attempts >= 3
-                                              ? "bg-red-500/20 text-red-400"
-                                              : "bg-yellow-500/20 text-yellow-400"
+                                              ? "bg-red-50 text-red-600"
+                                              : "bg-yellow-50 text-yellow-600"
                                           }`}
                                         >
                                           {progress.passed ? "Passed" : progress.attempts >= 3 ? "Failed" : "In Progress"}
@@ -423,7 +443,7 @@ export default function SubmissionsPage() {
                           <td className="p-4">
                             <Link
                               href={`/admin/submission/${encodeURIComponent(user.email)}`}
-                              className="text-blue-400 hover:text-blue-300 font-medium text-sm"
+                              className="text-blue-600 hover:text-blue-700 font-medium text-sm"
                             >
                               View Details
                             </Link>
@@ -441,3 +461,4 @@ export default function SubmissionsPage() {
     </>
   );
 }
+

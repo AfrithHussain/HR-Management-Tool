@@ -101,27 +101,27 @@ export default function SearchContent() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">AI Content Search</h1>
+      <h1 className="text-2xl font-bold text-gray-900">AI Content Search</h1>
 
       {/* Search Form */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Search Your Content</h2>
+      <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Search Your Content</h2>
         
         <form onSubmit={handleSearch} className="space-y-4">
           <div>
-            <label className="block text-gray-300 mb-2">Search Query</label>
+            <label className="block text-gray-600 mb-2">Search Query</label>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="e.g., how to increase revenue, monetization strategies, user engagement"
-              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500"
             />
-            <p className="text-xs text-gray-400 mt-1">Use natural language - AI will understand context and meaning</p>
+            <p className="text-xs text-gray-500 mt-1">Use natural language - AI will understand context and meaning</p>
           </div>
 
           <div>
-            <label className="block text-gray-300 mb-2">
+            <label className="block text-gray-600 mb-2">
               Relevance Threshold: {(similarityThreshold * 100).toFixed(0)}%
             </label>
             <input
@@ -133,7 +133,7 @@ export default function SearchContent() {
               onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-gray-400 mt-1">
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
               <span>More Results (20%)</span>
               <span>Higher Accuracy (90%)</span>
             </div>
@@ -141,21 +141,21 @@ export default function SearchContent() {
               <button
                 type="button"
                 onClick={() => setSimilarityThreshold(0.3)}
-                className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                className="px-2 py-1 text-xs bg-white hover:bg-gray-50 text-gray-900 rounded transition-colors border border-gray-300"
               >
                 Loose (30%)
               </button>
               <button
                 type="button"
                 onClick={() => setSimilarityThreshold(0.5)}
-                className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                className="px-2 py-1 text-xs bg-white hover:bg-gray-50 text-gray-900 rounded transition-colors border border-gray-300"
               >
                 Balanced (50%)
               </button>
               <button
                 type="button"
                 onClick={() => setSimilarityThreshold(0.7)}
-                className="px-2 py-1 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors"
+                className="px-2 py-1 text-xs bg-white hover:bg-gray-50 text-gray-900 rounded transition-colors border border-gray-300"
               >
                 Strict (70%)
               </button>
@@ -166,7 +166,7 @@ export default function SearchContent() {
             <button
               type="submit"
               disabled={isSearching || !searchQuery.trim()}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               {isSearching && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -178,7 +178,7 @@ export default function SearchContent() {
               <button
                 type="button"
                 onClick={clearSearch}
-                className="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition-colors"
+                className="px-4 py-3 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-medium transition-colors border border-gray-300"
               >
                 Clear
               </button>
@@ -189,19 +189,19 @@ export default function SearchContent() {
 
       {/* Search Results */}
       {searchResults.length > 0 && (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+        <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-lg p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               Search Results ({searchResults.length})
             </h2>
             <div className="flex items-center gap-4">
               {lastCleanedQuery && lastCleanedQuery !== searchQuery && (
-                <span className="text-sm text-blue-400">
+                <span className="text-sm text-blue-600">
                   Keywords: "{lastCleanedQuery}"
                 </span>
               )}
               {lastSearchTime && (
-                <span className="text-sm text-gray-400">
+                <span className="text-sm text-gray-500">
                   Found in {lastSearchTime}ms
                 </span>
               )}
@@ -210,37 +210,37 @@ export default function SearchContent() {
           
           <div className="space-y-4">
             {searchResults.map((item, index) => (
-              <div key={item.id} className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+              <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm bg-gray-600 text-gray-300 px-2 py-1 rounded">
+                      <span className="text-sm bg-gray-100 text-gray-600 px-2 py-1 rounded">
                         #{index + 1}
                       </span>
-                      <h3 className="text-lg font-medium text-white">{item.title}</h3>
+                      <h3 className="text-lg font-medium text-gray-900">{item.title}</h3>
                     </div>
                     
-                    <p className="text-gray-300 mt-1">{item.description}</p>
+                    <p className="text-gray-600 mt-1">{item.description}</p>
                     
                     <div className="flex items-center gap-4 mt-3">
-                      <span className="text-sm bg-emerald-600 text-white px-2 py-1 rounded">
+                      <span className="text-sm bg-emerald-100 text-emerald-700 px-2 py-1 rounded">
                         {item.type}
                       </span>
                       
                       {item.similarity && (
                         <span className={`text-sm px-2 py-1 rounded font-medium ${
                           item.similarity > 0.7 
-                            ? 'bg-green-600 text-white' 
+                            ? 'bg-green-100 text-green-700' 
                             : item.similarity > 0.5 
-                            ? 'bg-yellow-600 text-white' 
-                            : 'bg-red-600 text-white'
+                            ? 'bg-yellow-100 text-yellow-700' 
+                            : 'bg-red-100 text-red-700'
                         }`}>
                           {(item.similarity * 100).toFixed(1)}% match
                         </span>
                       )}
                       
                       {item.hasExtractedContent && (
-                        <span className="text-xs bg-blue-600 text-white px-2 py-1 rounded">
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
                           📄 Content Analyzed ({item.extractedContentLength} chars)
                         </span>
                       )}
@@ -248,7 +248,7 @@ export default function SearchContent() {
                     
                     <div className="flex flex-wrap gap-1 mt-2">
                       {item.tags?.map((tag, tagIndex) => (
-                        <span key={tagIndex} className="text-xs bg-gray-600 text-gray-300 px-2 py-1 rounded">
+                        <span key={tagIndex} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                           {tag}
                         </span>
                       ))}
@@ -274,8 +274,8 @@ export default function SearchContent() {
 
       {/* No Results State */}
       {searchQuery && searchResults.length === 0 && !isSearching && (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-          <div className="text-center py-8 text-gray-400">
+        <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-lg p-6">
+          <div className="text-center py-8 text-gray-500">
             <p className="text-lg mb-2">No results found for "{searchQuery}"</p>
             <div className="text-sm space-y-1">
               <p>Try:</p>
@@ -290,12 +290,12 @@ export default function SearchContent() {
 
       {/* Empty State */}
       {!searchQuery && searchResults.length === 0 && (
-        <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
-          <div className="text-center py-8 text-gray-400">
-            <h3 className="text-lg font-medium text-white mb-2">Ready to Search!</h3>
+        <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-lg p-6">
+          <div className="text-center py-8 text-gray-500">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Ready to Search!</h3>
             <p>Enter a search query above to find relevant content using AI.</p>
             <div className="mt-4 text-sm">
-              <p className="font-medium text-gray-300 mb-2">Example searches:</p>
+              <p className="font-medium text-gray-600 mb-2">Example searches:</p>
               <div className="space-y-1">
                 <p>• "how to increase app revenue"</p>
                 <p>• "user engagement strategies"</p>

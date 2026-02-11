@@ -37,34 +37,49 @@ async function parsePdfBuffer(buffer: Buffer): Promise<string> {
 
 export async function POST(req: Request) {
   try {
+    console.log("=== API ROUTE CALLED ===");
     const formData = await req.formData();
     const role = formData.get("role") as string;
     const moduleName = formData.get("moduleName") as string;
     const customInstructions = formData.get("customInstructions") as string | null;
     const files = formData.getAll("documents") as File[];
 
+    console.log("Role:", role);
+    console.log("Module Name:", moduleName);
+    console.log("Files count:", files.length);
+
     if (!files || files.length === 0) {
+      console.error("No files provided");
       return NextResponse.json({ error: "No files provided" }, { status: 400 });
+    }
+
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY not found in environment");
+      return NextResponse.json({ error: "API key not configured" }, { status: 500 });
     }
 
     // Process each file separately to maintain context
     const fileContents: { name: string; content: string }[] = [];
 
     for (const file of files) {
+      console.log(`Processing file: ${file.name}`);
       let fileContent = "";
       try {
         if (file.type === "application/pdf" || file.name.endsWith(".pdf")) {
           const arrayBuffer = await file.arrayBuffer();
           const buffer = Buffer.from(arrayBuffer);
           fileContent = await parsePdfBuffer(buffer);
+          console.log(`PDF parsed, content length: ${fileContent.length}`);
         } else {
           fileContent = await file.text();
+          console.log(`Text file read, content length: ${fileContent.length}`);
         }
         fileContent = fileContent.replace(/\n\s*\n/g, '\n');
         
         // Truncate individual file if too large
         if (fileContent.length > 50000) {
           fileContent = fileContent.slice(0, 50000) + "\n...(truncated)...";
+          console.log(`Content truncated to 50000 chars`);
         }
         
         fileContents.push({ name: file.name, content: fileContent });
@@ -204,13 +219,24 @@ export async function POST(req: Request) {
       `;
 
       try {
+        console.log(`Generating questions for ${fileData.name} (${questionsForThisFile} questions)`);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
         const result = await withRetry(() => model.generateContent(PROMPT));
         const response = await result.response;
         const text = response.text();
+        console.log(`AI Response received, length: ${text.length}`);
+        console.log(`First 500 chars of response:`, text.substring(0, 500));
         const cleanJson = text.replace(/```json|```/g, '').trim();
         
-        let questions = JSON.parse(cleanJson);
+        let questions;
+        try {
+          questions = JSON.parse(cleanJson);
+          console.log(`Parsed ${Array.isArray(questions) ? questions.length : 0} questions from JSON`);
+        } catch (parseError: any) {
+          console.error(`JSON Parse Error:`, parseError.message);
+          console.error(`Attempted to parse:`, cleanJson.substring(0, 500));
+          throw new Error(`Failed to parse AI response: ${parseError.message}`);
+        }
         
         // CRITICAL: Enforce the exact number of questions
         if (Array.isArray(questions)) {
@@ -232,8 +258,11 @@ export async function POST(req: Request) {
         
         allQuestions.push(...questionsWithSource);
         console.log(`Added ${questionsWithSource.length} questions from ${fileData.name}. Total so far: ${allQuestions.length}`);
-      } catch (err) {
+      } catch (err: any) {
         console.error(`Failed to generate questions for ${fileData.name}:`, err);
+        console.error(`Error details:`, err.message);
+        console.error(`Error stack:`, err.stack);
+        // Continue with other files instead of failing completely
       }
     }
 
@@ -243,13 +272,24 @@ export async function POST(req: Request) {
     console.log(`===================\n`);
 
     if (allQuestions.length === 0) {
-      return NextResponse.json({ error: "Failed to generate questions" }, { status: 500 });
+      console.error("No questions were generated from any file");
+      return NextResponse.json({ 
+        error: "Failed to generate questions",
+        details: "AI did not generate any questions. Check server logs for details."
+      }, { status: 500 });
     }
 
     return NextResponse.json({ questions: allQuestions });
 
-  } catch (error) {
-    console.error("Internal Server Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("=== API ERROR ===");
+    console.error("Error message:", error?.message);
+    console.error("Error stack:", error?.stack);
+    console.error("Full error:", error);
+    return NextResponse.json({ 
+      error: "Internal Server Error", 
+      details: error?.message || "Unknown error",
+      stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    }, { status: 500 });
   }
 }

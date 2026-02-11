@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-export type UserRole = "frontend" | "backend" | "data" | "android" | "qa" | "plug" | "socket";
+export type UserRole = "frontend" | "backend" | "data" | "android" | "qa" | "cloudsync-pro" | "taskflow" | "analytics-pro" | "company-training";
 
 export const AVAILABLE_ROLES: { value: UserRole; label: string }[] = [
   { value: "frontend", label: "Frontend" },
@@ -12,14 +12,17 @@ export const AVAILABLE_ROLES: { value: UserRole; label: string }[] = [
 ];
 
 export const AVAILABLE_PRODUCTS: { value: UserRole; label: string }[] = [
-  { value: "plug", label: "Plug" },
-  { value: "socket", label: "Socket" },
+  { value: "cloudsync-pro", label: "CloudSync Pro" },
+  { value: "taskflow", label: "TaskFlow" },
+  { value: "analytics-pro", label: "AnalyticsPro" },
+  { value: "company-training", label: "Company Training" },
 ];
 
 export interface User {
   email: string;
   name: string;
-  role: UserRole;
+  role: UserRole; // Primary role (for backward compatibility)
+  roles?: UserRole[]; // Array of all roles/products user has access to
   isWhitelisted: boolean;
   isBlocked: boolean;
   isSuperuser: boolean;
@@ -39,43 +42,55 @@ export interface User {
   }>;
 }
 
-export const isGreedyGameUser = (email: string): boolean => {
-  return email.endsWith("@greedygame.com");
+export const isHireLearnUser = (email: string): boolean => {
+  return email.endsWith("@hirelearn.com");
 };
 
 export const checkUserAccess = async (
   email: string
-): Promise<{ allowed: boolean; reason?: string; user?: User; isAdmin?: boolean }> => {
+): Promise<{ allowed: boolean; reason?: string; user?: User; isSuperuser?: boolean }> => {
+  console.log("Checking access for:", email);
+  
   // Check if user exists in whitelist
   const userDoc = await getDoc(doc(db, "users", email));
 
   if (!userDoc.exists()) {
+    console.log("User document does not exist");
     return {
       allowed: false,
       reason: "Permission denied!",
     };
   }
 
-  const userData = userDoc.data() as User;
+  const userData = userDoc.data() as any;
+  console.log("User data:", userData);
 
-  if (userData.isBlocked) {
+  // Check if user is blocked
+  if (userData.isBlocked === true) {
+    console.log("User is blocked");
     return {
       allowed: false,
       reason: "Your access has been blocked. Please contact the administrator.",
     };
   }
 
-  if (!userData.isWhitelisted) {
+  // Check if user is allowed (support both 'allowed' and 'isWhitelisted' fields)
+  const isAllowed = userData.allowed === true || userData.isWhitelisted === true;
+  console.log("Is allowed:", isAllowed, "- allowed:", userData.allowed, "isWhitelisted:", userData.isWhitelisted);
+  
+  if (!isAllowed) {
+    console.log("User is not whitelisted");
     return {
       allowed: false,
       reason: "Permission denied!",
     };
   }
 
-  // Check if user is admin (isSuperuser set manually in Firebase)
-  const isAdmin = userData.isSuperuser === true;
+  // Check if user is superuser
+  const isSuperuser = userData.isSuperuser === true;
+  console.log("Is superuser:", isSuperuser);
 
-  return { allowed: true, user: userData, isAdmin };
+  return { allowed: true, user: userData, isSuperuser };
 };
 
 export const createOrUpdateUser = async (
@@ -83,15 +98,27 @@ export const createOrUpdateUser = async (
   name: string,
   isLogin: boolean = false
 ): Promise<void> => {
+  console.log("createOrUpdateUser called:", { email, name, isLogin });
+  
   const userRef = doc(db, "users", email);
   const userDoc = await getDoc(userRef);
 
   if (!userDoc.exists()) {
-    // Create new user with default frontend role
+    console.log("User document does not exist");
+    
+    // During login, do NOT create new users - they must be whitelisted first by admin
+    if (isLogin) {
+      console.log("Login attempt - not creating new user, must be whitelisted first");
+      return; // User doesn't exist, let checkUserAccess handle the denial
+    }
+    
+    console.log("Creating new user (not during login)");
+    // Only create new user when called from admin panel (isLogin = false)
     await setDoc(userRef, {
       email,
       name,
       role: "frontend" as UserRole,
+      roles: ["frontend"], // Add roles array
       isWhitelisted: false, // No auto-whitelist, must be done manually
       isBlocked: false,
       isSuperuser: false, // No auto-admin, must be set manually in Firebase
@@ -100,20 +127,25 @@ export const createOrUpdateUser = async (
       status: "pending",
       comment: "",
       createdAt: serverTimestamp(),
-      lastLoginAt: isLogin ? serverTimestamp() : null,
+      lastLoginAt: null,
       submissionId: null,
       allowedModules: [],
     });
-  } else if (isLogin) {
-    // Update last login
-    await setDoc(
-      userRef,
-      {
-        lastLoginAt: serverTimestamp(),
-        name, // Update name in case it changed
-      },
-      { merge: true }
-    );
+  } else {
+    console.log("User document exists");
+    
+    if (isLogin) {
+      console.log("Updating last login time");
+      // Update last login for existing users
+      await setDoc(
+        userRef,
+        {
+          lastLoginAt: serverTimestamp(),
+          name, // Update name in case it changed
+        },
+        { merge: true }
+      );
+    }
   }
 };
 
@@ -142,17 +174,22 @@ export const whitelistEmails = async (
       if (userDoc.exists()) {
         const userData = userDoc.data();
         
-        // For GG products (plug/socket), allow adding more modules
-        if ((role === "plug" || role === "socket") && allowedModules.length > 0) {
+        // For HireLearn products (cloudsync-pro, taskflow, analytics-pro, company-training), allow adding more modules
+        if ((role === "cloudsync-pro" || role === "taskflow" || role === "analytics-pro" || role === "company-training") && allowedModules.length > 0) {
           const existingModules = userData.allowedModules || [];
           const newModules = [...new Set([...existingModules, ...allowedModules])]; // Merge and deduplicate
           
-          // Update user with new modules
+          // Add role to roles array if not already present
+          const existingRoles = userData.roles || [userData.role];
+          const newRoles = [...new Set([...existingRoles, role])]; // Merge and deduplicate
+          
+          // Update user with new modules and roles
           await setDoc(
             userRef,
             {
               isWhitelisted: true,
-              role,
+              role, // Update primary role to latest
+              roles: newRoles, // Store all roles
               allowedModules: newModules,
             },
             { merge: true }
@@ -161,7 +198,7 @@ export const whitelistEmails = async (
           updated++;
         } else {
           // For traditional roles, check if already whitelisted
-          if (userData.isWhitelisted) {
+          if (userData.isWhitelisted && !allowedModules.length) {
             duplicates.push(email.trim());
             continue;
           }
@@ -171,6 +208,7 @@ export const whitelistEmails = async (
             {
               isWhitelisted: true,
               role,
+              roles: [role], // Single role for traditional roles
               allowedModules,
             },
             { merge: true }
@@ -184,6 +222,7 @@ export const whitelistEmails = async (
           email: email.trim(),
           name: "",
           role,
+          roles: [role], // Initialize roles array
           isWhitelisted: true,
           isBlocked: false,
           isSuperuser: false, // Admin access must be set manually

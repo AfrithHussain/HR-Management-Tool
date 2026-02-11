@@ -13,9 +13,11 @@ import {
 } from "firebase/firestore";
 
 // --- Configuration ---
-const GG_ROLES = [
-  { value: "plug", label: "Plug" },
- 
+const PRODUCT_CATEGORIES = [
+  { value: "cloudsync-pro", label: "CloudSync Pro" },
+  { value: "taskflow", label: "TaskFlow" },
+  { value: "analytics-pro", label: "AnalyticsPro" },
+  { value: "company-training", label: "Company Training" },
 ];
 
 interface GGQuestion {
@@ -35,7 +37,7 @@ export default function GGQuestionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   
   // Navigation State
-  const [activeRole, setActiveRole] = useState("plug");
+  const [activeRole, setActiveRole] = useState("cloudsync-pro");
   const [activeModule, setActiveModule] = useState<string>("All");
 
   // Modal States
@@ -57,7 +59,7 @@ export default function GGQuestionsPage() {
     correctAnswers: [] as number[],
     isMultiSelect: false,
     difficulty: "Medium" as "Easy" | "Medium" | "Hard",
-    role: "plug",
+    role: "cloudsync-pro",
     moduleName: ""
   });
   const [editingQuestion, setEditingQuestion] = useState<GGQuestion | null>(null);
@@ -99,8 +101,13 @@ export default function GGQuestionsPage() {
   const availableModules = ["All", ...uniqueModules];
 
   const getNextModuleNumber = () => {
-    const allModules = questions.map(q => q.moduleName || "").filter(Boolean);
-    const numbers = allModules.map(name => {
+    // Only look at modules for the CURRENT role/product
+    const roleModules = questions
+      .filter(q => q.role === activeRole)
+      .map(q => q.moduleName || "")
+      .filter(Boolean);
+    
+    const numbers = roleModules.map(name => {
         const match = name.match(/Module (\d+):/);
         return match ? parseInt(match[1]) : 0;
     });
@@ -202,9 +209,19 @@ export default function GGQuestionsPage() {
         for (let i = 0; i < selectedFiles.length; i++) {
             if (selectedFiles[i].size > 0) formData.append("documents", selectedFiles[i]);
         }
+        
+        console.log("Sending request to API...");
         const response = await fetch('/api/gg-questions', { method: 'POST', body: formData });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Generation failed");
+        
+        console.log("API Response:", data);
+        
+        if (!response.ok) {
+          const errorMsg = data.details || data.error || "Generation failed";
+          console.error("API Error:", errorMsg);
+          throw new Error(errorMsg);
+        }
+        
         const generatedQuestions = data.questions;
         const savedQuestions: GGQuestion[] = [];
         for (const q of generatedQuestions) {
@@ -219,8 +236,9 @@ export default function GGQuestionsPage() {
         setNewModuleNameInput("");
         setCustomInstructions("");
         setSelectedFiles(null);
-    } catch (error) {
-        toast.error("AI Generation failed.");
+    } catch (error: any) {
+        console.error("Generation error:", error);
+        toast.error(`AI Generation failed: ${error.message || "Unknown error"}`);
     } finally {
         setIsProcessingDocs(false);
     }
@@ -228,10 +246,10 @@ export default function GGQuestionsPage() {
 
   const getDifficultyColor = (diff: string) => {
     switch(diff) {
-        case "Easy": return "bg-green-500/10 text-green-400 border-green-500/20";
-        case "Medium": return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
-        case "Hard": return "bg-red-500/10 text-red-400 border-red-500/20";
-        default: return "bg-gray-700 text-gray-400";
+        case "Easy": return "bg-green-50 text-green-600 border-green-200";
+        case "Medium": return "bg-yellow-50 text-yellow-600 border-yellow-200";
+        case "Hard": return "bg-red-50 text-red-600 border-red-200";
+        default: return "bg-white text-gray-500";
     }
   };
 
@@ -259,20 +277,19 @@ export default function GGQuestionsPage() {
 
   return (
     <>
-      <Toaster />
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-white">GG Questions</h1>
+        <h1 className="text-3xl font-bold text-gray-900">HireLearn Questions</h1>
       </div>
 
       {/* Role Tabs */}
-      <div className="mb-4 flex gap-6 border-b border-gray-700 pb-2">
-        {GG_ROLES.map((role) => (
+      <div className="mb-4 flex gap-6 border-b border-gray-200 pb-2">
+        {PRODUCT_CATEGORIES.map((category) => (
           <button
-            key={role.value}
-            onClick={() => { setActiveRole(role.value); setActiveModule("All"); }}
-            className={`text-lg font-medium transition-all px-2 py-1 ${activeRole === role.value ? "text-white border-b-2 border-emerald-500" : "text-gray-500 hover:text-gray-300"}`}
+            key={category.value}
+            onClick={() => { setActiveRole(category.value); setActiveModule("All"); }}
+            className={`text-lg font-medium transition-all px-2 py-1 ${activeRole === category.value ? "text-gray-900 border-b-2 border-emerald-500" : "text-gray-500 hover:text-gray-600"}`}
           >
-            {role.label}
+            {category.label}
           </button>
         ))}
       </div>
@@ -286,8 +303,8 @@ export default function GGQuestionsPage() {
                 onClick={() => setActiveModule(mod)}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all border ${
                     activeModule === mod 
-                    ? "bg-emerald-500/10 border-emerald-500/50 text-emerald-400" 
-                    : "bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750"
+                    ? "bg-gray-50 border-gray-500 text-gray-800" 
+                    : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-white"
                 }`}
             >
                 {mod}
@@ -296,7 +313,7 @@ export default function GGQuestionsPage() {
         <div className="flex items-center justify-end w-full">
             <button 
             onClick={() => setIsUploadModalOpen(true)}
-           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all ml-2"
+           className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg cursor-pointer transition-all ml-2"
         >
         + New Module
         </button>
@@ -313,7 +330,7 @@ export default function GGQuestionsPage() {
             });
             setIsAddModalOpen(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all ml-2"
+          className="px-4 py-2 bg-black text-white text-sm font-medium rounded-lg cursor-pointer transition-all ml-2"
         >
           + Add Question
         </button>
@@ -322,36 +339,36 @@ export default function GGQuestionsPage() {
 
       {/* Data Table */}
       {isLoading ? (
-        <div className="text-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-700 border-t-emerald-500 mx-auto"></div></div>
+        <div className="text-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-emerald-500 mx-auto"></div></div>
       ) : (
-        <div className="bg-gray-900/40 border border-gray-800 rounded-xl overflow-hidden shadow-2xl">
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg">
           {filteredQuestions.length === 0 ? (
             <div className="p-16 text-center text-gray-500 flex flex-col items-center">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mb-4 text-2xl">📂</div>
-                <p className="text-lg text-gray-300 font-medium">No questions in this module.</p>
-                <button onClick={() => setIsUploadModalOpen(true)} className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md border border-gray-700 transition-colors">Generate with AI</button>
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-2xl">📂</div>
+                <p className="text-lg text-gray-600 font-medium">No questions in this module.</p>
+                <button onClick={() => setIsUploadModalOpen(true)} className="mt-4 px-4 py-2 bg-gray-50 hover:bg-white text-gray-900 rounded-md border border-gray-200 transition-colors">Generate with AI</button>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-900/80 backdrop-blur border-b border-gray-800">
-                  <tr className="text-left text-gray-400 text-xs uppercase tracking-wider">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr className="text-left text-gray-600 text-xs uppercase tracking-wider">
                     <th className="p-4 font-medium">Question Details</th>
                     <th className="p-4 font-medium w-48">Difficulty</th>
                     <th className="p-4 font-medium text-right w-32">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800">
+                <tbody className="divide-y divide-gray-200">
                   {filteredQuestions.map((q) => (
-                    <tr key={q.id} className="hover:bg-gray-800/30 transition-colors group">
+                    <tr key={q.id} className="hover:bg-gray-50 transition-colors group">
                       <td className="p-4 align-top">
-                        <p className="text-gray-200 font-medium mb-1 text-base">{q.question}</p>
+                        <p className="text-gray-900 font-medium mb-1 text-base">{q.question}</p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-xs text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 font-mono tracking-tighter">
+                            <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 font-mono tracking-tighter">
                               {q.moduleName || "General"}
                             </span>
                             {q.sourceFile && (
-                              <span className="text-xs text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20 font-mono tracking-tighter" title="Source document">
+                              <span className="text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 font-mono tracking-tighter" title="Source document">
                                 📄 {q.sourceFile}
                               </span>
                             )}
@@ -366,8 +383,8 @@ export default function GGQuestionsPage() {
                       </td>
                       <td className="p-4 text-right align-top">
                         <div className="flex justify-end gap-3 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => { setEditingQuestion(q); setIsEditModalOpen(true); }} className="text-blue-400 hover:text-blue-300 text-sm font-medium">Edit</button>
-                            <button onClick={() => handleDeleteQuestion(q.id)} className="text-red-400 hover:text-red-300 text-sm font-medium">Delete</button>
+                            <button onClick={() => { setEditingQuestion(q); setIsEditModalOpen(true); }} className="text-blue-600 hover:text-blue-700 text-sm font-medium">Edit</button>
+                            <button onClick={() => handleDeleteQuestion(q.id)} className="text-red-600 hover:text-red-700 text-sm font-medium">Delete</button>
                         </div>
                       </td>
                     </tr>
@@ -382,18 +399,18 @@ export default function GGQuestionsPage() {
       {/* --- UPLOAD MODAL --- */}
       {isUploadModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-900 border border-gray-700 p-6 rounded-2xl shadow-2xl w-full max-w-2xl text-center relative">
+            <div className="bg-gray-50 border border-gray-200 p-6 rounded-2xl shadow-2xl w-full max-w-2xl text-center relative">
                 <div className="mb-3 relative z-10">
                     <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-500/20">
                         <span className="text-2xl">📚</span>
                     </div>
-                    <h2 className="text-xl font-bold text-white mb-1">Create Module {getNextModuleNumber()}</h2>
-                    <p className="text-gray-400 text-xs">Upload one or multiple documents for this module.</p>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">Create Module {getNextModuleNumber()}</h2>
+                    <p className="text-gray-500 text-xs">Upload one or multiple documents for this module.</p>
                     <p className="text-indigo-400 text-xs mt-0.5">💡 Multiple files will be distributed proportionally</p>
                 </div>
                 {isProcessingDocs ? (
                     <div className="py-6 space-y-3">
-                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-700 border-t-indigo-500 mx-auto"></div>
+                        <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-indigo-500 mx-auto"></div>
                         <p className="text-indigo-400 text-sm font-medium animate-pulse">
                             {selectedFiles && selectedFiles.length > 1 
                                 ? `Generating questions from ${selectedFiles.length} documents separately...` 
@@ -410,7 +427,7 @@ export default function GGQuestionsPage() {
                     <div className="space-y-3 relative z-10">
                         {/* File Upload Area */}
                         <div 
-                            className={`border-2 border-dashed rounded-xl p-1 cursor-pointer transition-all group ${isDragging ? "border-emerald-500 bg-emerald-500/5" : "border-gray-700 hover:border-indigo-500 hover:bg-gray-800/50"}`}
+                            className={`border-2 border-dashed rounded-xl p-1 cursor-pointer transition-all group ${isDragging ? "border-emerald-500 bg-emerald-50" : "border-gray-300 hover:border-indigo-500 hover:bg-white"}`}
                             onClick={() => fileInputRef.current?.click()}
                             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                             onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
@@ -423,7 +440,7 @@ export default function GGQuestionsPage() {
                             <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">
                                 {selectedFiles && selectedFiles.length > 1 ? "📚" : "📄"}
                             </div>
-                            <p className="text-gray-300 text-sm font-medium mb-1">
+                            <p className="text-gray-600 text-sm font-medium mb-1">
                                 {selectedFiles 
                                     ? `${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''} selected` 
                                     : "Click or Drag Files Here"
@@ -444,9 +461,9 @@ export default function GGQuestionsPage() {
 
                         {/* Selected Files List */}
                         {selectedFiles && selectedFiles.length > 0 && (
-                            <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-3 overflow-y-auto max-h-[20vh]">
+                            <div className="bg-white border border-gray-200 rounded-xl p-3 overflow-y-auto max-h-[20vh]">
                                 <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-xs font-semibold text-gray-300">Selected Files</h3>
+                                    <h3 className="text-xs font-semibold text-gray-600">Selected Files</h3>
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -460,13 +477,13 @@ export default function GGQuestionsPage() {
                                 </div>
                                 <div className="max-h-40 overflow-y-auto space-y-1.5">
                                     {Array.from(selectedFiles).map((file, idx) => (
-                                        <div key={idx} className="flex items-center justify-between bg-gray-900/50 px-2.5 py-2 rounded-lg group hover:bg-gray-900/80 transition-colors">
+                                        <div key={idx} className="flex items-center justify-between bg-gray-50 px-2.5 py-2 rounded-lg group hover:bg-white transition-colors">
                                             <div className="flex items-center gap-2 flex-1 min-w-0">
                                                 <span className="text-base flex-shrink-0">
                                                     {file.name.endsWith('.pdf') ? '📕' : file.name.endsWith('.md') ? '📘' : '📄'}
                                                 </span>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-xs text-gray-300 truncate">{file.name}</p>
+                                                    <p className="text-xs text-gray-600 truncate">{file.name}</p>
                                                     <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
                                                 </div>
                                             </div>
@@ -500,7 +517,7 @@ export default function GGQuestionsPage() {
                             <input 
                                 type="text" 
                                 placeholder="e.g., React Hooks, API Integration"
-                                className="w-full p-2.5 text-sm bg-gray-950 border border-gray-700 rounded-lg text-white outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
+                                className="w-full p-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-indigo-500 transition-all placeholder:text-gray-500"
                                 value={newModuleNameInput}
                                 onChange={(e) => setNewModuleNameInput(e.target.value)}
                             />
@@ -516,7 +533,7 @@ export default function GGQuestionsPage() {
                             
                             <textarea 
                                 placeholder="e.g., 2 questions from first file and 8 from second file, make them all hard"
-                                className="w-full p-2.5 text-sm bg-gray-950 border border-gray-700 rounded-lg text-white outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600 resize-none"
+                                className="w-full p-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 outline-none focus:border-indigo-500 transition-all placeholder:text-gray-500 resize-none"
                                 rows={3}
                                 value={customInstructions}
                                 onChange={(e) => setCustomInstructions(e.target.value)}
@@ -531,14 +548,14 @@ export default function GGQuestionsPage() {
                                     setSelectedFiles(null);
                                     setNewModuleNameInput("");
                                 }} 
-                                className="flex-1 py-2.5 text-sm bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg font-medium transition-colors"
+                                className="flex-1 py-2.5 text-sm bg-white hover:bg-gray-50 text-gray-600 rounded-lg font-medium transition-colors border border-gray-300"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleGenerate} 
                                 disabled={!selectedFiles || !newModuleNameInput.trim()} 
-                                className="flex-1 py-2.5 text-sm bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                                className="flex-1 py-2.5 text-sm bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
                             >
                                 <span>✨</span>
                                 <span>Generate Questions</span>
@@ -553,34 +570,34 @@ export default function GGQuestionsPage() {
       {/* --- ADD MODAL --- */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-6 text-white">Add Question</h2>
+          <div className="bg-gray-50 border border-gray-200 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">Add Question</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Question</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Question</label>
                 <input
                   type="text"
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={newQuestion.question}
                   onChange={(e) => setNewQuestion({ ...newQuestion, question: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Module Name</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Module Name</label>
                 <input
                   type="text"
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={newQuestion.moduleName}
                   onChange={(e) => setNewQuestion({ ...newQuestion, moduleName: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Options</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Options</label>
                 {newQuestion.options.map((option, index) => (
                   <input
                     key={index}
                     type="text"
-                    className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mb-2"
+                    className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mb-2"
                     placeholder={`Option ${index + 1}`}
                     value={option}
                     onChange={(e) => {
@@ -592,13 +609,13 @@ export default function GGQuestionsPage() {
                 ))}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Correct Answer(s)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Correct Answer(s)</label>
                 <div className="space-y-2">
                   {newQuestion.options.map((option, index) => (
-                    <label key={index} className="flex items-center text-gray-300 hover:text-white cursor-pointer">
+                    <label key={index} className="flex items-center text-gray-600 hover:text-gray-900 cursor-pointer">
                       <input
                         type="checkbox"
-                        className="mr-3 w-4 h-4 text-emerald-500 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                        className="mr-3 w-4 h-4 text-emerald-500 bg-white border-gray-300 rounded focus:ring-emerald-500"
                         checked={newQuestion.correctAnswers.includes(index)}
                         onChange={(e) => {
                           if (e.target.checked) {
@@ -614,9 +631,9 @@ export default function GGQuestionsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Difficulty</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Difficulty</label>
                 <select
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={newQuestion.difficulty}
                   onChange={(e) => setNewQuestion({ ...newQuestion, difficulty: e.target.value as "Easy" | "Medium" | "Hard" })}
                 >
@@ -626,10 +643,10 @@ export default function GGQuestionsPage() {
                 </select>
               </div>
               <div>
-                <label className="flex items-center text-gray-300 hover:text-white cursor-pointer">
+                <label className="flex items-center text-gray-600 hover:text-gray-900 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="mr-3 w-4 h-4 text-emerald-500 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                    className="mr-3 w-4 h-4 text-emerald-500 bg-white border-gray-300 rounded focus:ring-emerald-500"
                     checked={newQuestion.isMultiSelect}
                     onChange={(e) => setNewQuestion({ ...newQuestion, isMultiSelect: e.target.checked })}
                   />
@@ -638,8 +655,8 @@ export default function GGQuestionsPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={handleAddQuestion} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all">Add Question</button>
-              <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all">Cancel</button>
+              <button onClick={handleAddQuestion} className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-semibold transition-all">Add Question</button>
+              <button onClick={() => setIsAddModalOpen(false)} className="px-6 py-3 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold transition-all border border-gray-300">Cancel</button>
             </div>
           </div>
         </div>
@@ -648,34 +665,34 @@ export default function GGQuestionsPage() {
       {/* --- EDIT MODAL --- */}
       {isEditModalOpen && editingQuestion && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-6 text-white">Edit Question</h2>
+          <div className="bg-gray-50 border border-gray-200 p-8 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">Edit Question</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Question</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Question</label>
                 <input
                   type="text"
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={editingQuestion.question}
                   onChange={(e) => setEditingQuestion({ ...editingQuestion, question: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Module Name</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Module Name</label>
                 <input
                   type="text"
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={editingQuestion.moduleName || ""}
                   onChange={(e) => setEditingQuestion({ ...editingQuestion, moduleName: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Options</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Options</label>
                 {editingQuestion.options.map((option, index) => (
                   <input
                     key={index}
                     type="text"
-                    className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mb-2"
+                    className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none mb-2"
                     placeholder={`Option ${index + 1}`}
                     value={option}
                     onChange={(e) => {
@@ -687,13 +704,13 @@ export default function GGQuestionsPage() {
                 ))}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Correct Answer(s)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Correct Answer(s)</label>
                 <div className="space-y-2">
                   {editingQuestion.options.map((option, index) => (
-                    <label key={index} className="flex items-center text-gray-300 hover:text-white cursor-pointer">
+                    <label key={index} className="flex items-center text-gray-600 hover:text-gray-900 cursor-pointer">
                       <input
                         type="checkbox"
-                        className="mr-3 w-4 h-4 text-emerald-500 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                        className="mr-3 w-4 h-4 text-emerald-500 bg-white border-gray-300 rounded focus:ring-emerald-500"
                         checked={editingQuestion.correctAnswers.includes(index)}
                         onChange={(e) => {
                           if (e.target.checked) {
@@ -709,9 +726,9 @@ export default function GGQuestionsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Difficulty</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Difficulty</label>
                 <select
-                  className="w-full p-3 bg-gray-900 border border-gray-600 rounded-lg text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                  className="w-full p-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                   value={editingQuestion.difficulty || "Medium"}
                   onChange={(e) => setEditingQuestion({ ...editingQuestion, difficulty: e.target.value as "Easy" | "Medium" | "Hard" })}
                 >
@@ -721,10 +738,10 @@ export default function GGQuestionsPage() {
                 </select>
               </div>
               <div>
-                <label className="flex items-center text-gray-300 hover:text-white cursor-pointer">
+                <label className="flex items-center text-gray-600 hover:text-gray-900 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="mr-3 w-4 h-4 text-emerald-500 bg-gray-700 border-gray-600 rounded focus:ring-emerald-500"
+                    className="mr-3 w-4 h-4 text-emerald-500 bg-white border-gray-300 rounded focus:ring-emerald-500"
                     checked={editingQuestion.isMultiSelect}
                     onChange={(e) => setEditingQuestion({ ...editingQuestion, isMultiSelect: e.target.checked })}
                   />
@@ -733,8 +750,8 @@ export default function GGQuestionsPage() {
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={handleUpdateQuestion} className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all">Update Question</button>
-              <button onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-semibold transition-all">Cancel</button>
+              <button onClick={handleUpdateQuestion} className="px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-semibold transition-all">Update Question</button>
+              <button onClick={() => setIsEditModalOpen(false)} className="px-6 py-3 bg-white hover:bg-gray-50 text-gray-900 rounded-lg font-semibold transition-all border border-gray-300">Cancel</button>
             </div>
           </div>
         </div>

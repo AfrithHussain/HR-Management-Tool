@@ -1,38 +1,52 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection - allow authenticated users to read/write their own record
-    // Allow GreedyGame users to read/write all records
+    // Helper function to check if user is superuser
+    function isSuperuser() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.isSuperuser == true;
+    }
+    
+    // Helper function to check if user is whitelisted
+    function isWhitelisted() {
+      return request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.token.email)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.isWhitelisted == true ||
+         get(/databases/$(database)/documents/users/$(request.auth.token.email)).data.allowed == true);
+    }
+    
+    // Users collection - authenticated users can read their own doc, admins can write
     match /users/{email} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && (
-        request.auth.token.email == email ||
-        request.auth.token.email.matches('.*@greedygame[.]com')
-      );
+      allow create: if isSuperuser();
+      allow update: if isSuperuser() || request.auth.token.email == email;
+      allow delete: if isSuperuser();
     }
     
-    // Allow read access to questions for authenticated users
-    // Only GreedyGame users can write
+    // Questions - authenticated users can read, only admins can write
     match /questions/{document=**} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        request.auth.token.email.matches('.*@greedygame[.]com');
+      allow read: if request.auth != null && isWhitelisted();
+      allow write: if isSuperuser();
     }
     
-    // Allow read/create for submissions
-    // Only GreedyGame users can update/delete
+    // GG Questions (HireLearn Questions) - authenticated users can read, only admins can write
+    match /gg-questions/{document=**} {
+      allow read: if request.auth != null && isWhitelisted();
+      allow write: if isSuperuser();
+    }
+    
+    // Submissions - authenticated users can read and create, only admins can update/delete
     match /submissions/{document=**} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-        request.auth.token.email.matches('.*@greedygame[.]com');
+      allow read: if request.auth != null && isWhitelisted();
+      allow create: if request.auth != null && isWhitelisted();
+      allow update, delete: if isSuperuser();
     }
     
-    // Content collection for AI search - allow authenticated users to read/write
+    // Content collection - authenticated users can read, only admins can write
     match /content/{document=**} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null;
+      allow read: if request.auth != null && isWhitelisted();
+      allow write: if isSuperuser();
     }
   }
 }

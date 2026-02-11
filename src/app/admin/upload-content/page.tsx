@@ -136,7 +136,7 @@ export default function UploadContent() {
       case 'document': return 'bg-blue-500/20 text-blue-400';
       case 'video': return 'bg-purple-500/20 text-purple-400';
       case 'pdf': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-gray-500/20 text-gray-500';
     }
   };
 
@@ -144,23 +144,23 @@ export default function UploadContent() {
     <div className="space-y-6">
       {/* Header with Add Button */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Upload Content</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Upload Content</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-4 md:px-6 py-2 md:py-3 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 text-white rounded-lg font-semibold transition-all shadow-lg text-sm md:text-base"
+          className="px-4 md:px-6 py-2 md:py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-semibold transition-all shadow-lg text-sm md:text-base"
         >
           + Add New Content
         </button>
       </div>
 
       {/* Uploaded Content List */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-4 md:p-6">
+      <div className="bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-lg p-4 md:p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg md:text-xl font-semibold text-white">Uploaded Content ({allContent.length})</h2>
+          <h2 className="text-lg md:text-xl font-semibold text-gray-900">Uploaded Content ({allContent.length})</h2>
           <button
             onClick={loadAllContent}
             disabled={isLoading}
-            className="px-3 md:px-4 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-800 text-white rounded-lg text-xs md:text-sm transition-colors flex items-center gap-2"
+            className="px-3 md:px-4 py-2 bg-white hover:bg-gray-50 disabled:bg-gray-100 text-gray-900 rounded-lg text-xs md:text-sm transition-colors flex items-center gap-2 border border-gray-300"
           >
             {isLoading ? (
               <>
@@ -175,20 +175,20 @@ export default function UploadContent() {
         
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-700 border-t-emerald-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-emerald-500"></div>
           </div>
         ) : allContent.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <div className="w-20 h-20 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
+          <div className="text-center py-12 text-gray-500">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">
               📄
             </div>
-            <p className="text-lg font-medium text-gray-300">No content uploaded yet.</p>
+            <p className="text-lg font-medium text-gray-600">No content uploaded yet.</p>
             <p className="text-sm mt-2">Click "Add New Content" to upload your first document!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {allContent.map((item) => (
-              <div key={item.id} className="bg-gray-700/50 border border-gray-600 rounded-lg p-4 hover:border-gray-500 transition-colors">
+              <div key={item.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors shadow-sm">
                 <div className="flex items-start justify-between mb-3">
                   <span className={`text-2xl md:text-3xl ${getTypeColor(item.type)}`}>
                     {getTypeIcon(item.type)}
@@ -198,24 +198,24 @@ export default function UploadContent() {
                   </span>
                 </div>
                 
-                <h3 className="text-base md:text-lg font-medium text-white mb-2 line-clamp-2">{item.title}</h3>
-                <p className="text-sm text-gray-300 mb-3 line-clamp-3">{item.description}</p>
+                <h3 className="text-base md:text-lg font-medium text-gray-900 mb-2 line-clamp-2">{item.title}</h3>
+                <p className="text-sm text-gray-600 mb-3 line-clamp-3">{item.description}</p>
                 
                 <div className="flex flex-wrap gap-1 mb-3">
                   {item.tags?.slice(0, 3).map((tag, index) => (
-                    <span key={index} className="text-xs bg-gray-600 text-gray-300 px-2 py-0.5 rounded">
+                    <span key={index} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
                       {tag}
                     </span>
                   ))}
                   {item.tags?.length > 3 && (
-                    <span className="text-xs text-gray-400 px-2 py-0.5">
+                    <span className="text-xs text-gray-500 px-2 py-0.5">
                       +{item.tags.length - 3} more
                     </span>
                   )}
                 </div>
                 
-                <div className="flex items-center justify-between pt-3 border-t border-gray-600">
-                  <span className="text-xs text-gray-400">
+                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                  <span className="text-xs text-gray-500">
                     {item.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}
                   </span>
                   <div className="flex gap-2">
@@ -244,52 +244,52 @@ export default function UploadContent() {
       {/* Add Content Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 border border-gray-700 p-5  rounded-2xl shadow-2xl w-full max-w-2xl max-h-[100vh] overflow-y-auto">
-            <h2 className="text-xl md:text-2xl font-bold mb-6 text-white">Add New Content</h2>
+          <div className="bg-gray-50 border border-gray-200 p-5  rounded-2xl shadow-2xl w-full max-w-2xl max-h-[100vh] overflow-y-auto">
+            <h2 className="text-xl md:text-2xl font-bold mb-6 text-gray-900">Add New Content</h2>
             
             <form onSubmit={handleUpload} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Title *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Title *</label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="e.g., App Monetization Strategies"
-                  className="w-full px-3 py-2.5 text-sm bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Description *</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Description *</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Detailed description of the content..."
-                  className="w-full px-3 py-2.5 text-sm bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-24 resize-none"
+                  className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-24 resize-none"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Tags * (comma separated)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Tags * (comma separated)</label>
                 <input
                   type="text"
                   value={formData.tags}
                   onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                   placeholder="e.g., revenue, monetization, gaming, ads"
-                  className="w-full px-3 py-2.5 text-sm bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   required
                 />
-                <p className="text-xs text-gray-400 mt-1.5">Add relevant keywords to help with search accuracy</p>
+                <p className="text-xs text-gray-500 mt-1.5">Add relevant keywords to help with search accuracy</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Content Type</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">Content Type</label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
-                  className="w-full px-3 py-2.5 text-sm bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="document">📄 Document</option>
                   <option value="video">🎥 Video</option>
@@ -298,23 +298,23 @@ export default function UploadContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">URL * (Public Link)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-600">URL * (Public Link)</label>
                 <input
                   type="url"
                   value={formData.url}
                   onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                   placeholder="https://docs.google.com/document/d/..."
-                  className="w-full px-3 py-2.5 text-sm bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   required
                 />
-                <p className="text-xs text-gray-400 mt-1.5">Make sure the link is publicly accessible</p>
+                <p className="text-xs text-gray-500 mt-1.5">Make sure the link is publicly accessible</p>
               </div>
 
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-blue-500 hover:from-emerald-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 bg-gray-900 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
                 >
                   {isUploading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -334,7 +334,7 @@ export default function UploadContent() {
                     });
                   }}
                   disabled={isUploading}
-                  className="flex-1 py-2.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white rounded-lg font-semibold transition-all"
+                  className="flex-1 py-2.5 bg-white hover:bg-gray-50 disabled:opacity-50 text-gray-900 rounded-lg font-semibold transition-all border border-gray-300"
                 >
                   Cancel
                 </button>
