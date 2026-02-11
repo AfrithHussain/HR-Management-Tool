@@ -7,7 +7,7 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/admin/submissions');
+    router.replace('/admin/users');
   }, [router]);
 
   return (
